@@ -7,12 +7,10 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
-import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlExplainFormat;
 import org.apache.calcite.sql.SqlExplainLevel;
-import org.duckdb.DuckDBConnection;
 
 public class App
 {
@@ -54,17 +52,17 @@ public class App
 
     public static void main(String[] args) throws Exception
     {
-        if (args.length == 0) {
-            System.out.println("Usage: java -jar App.jar <arg1> <arg2>");
-            return;
-        }
+        // if (args.length == 0) {
+        //     System.out.println("Usage: java -jar App.jar <arg1> <arg2>");
+        //     return;
+        // }
 
-        // Feel free to modify this to take as many or as few arguments as you want.
-        System.out.println("Running the app!");
-        String arg1 = args[0];
-        System.out.println("\tArg1: " + arg1);
-        String arg2 = args[1];
-        System.out.println("\tArg2: " + arg2);
+        // // Feel free to modify this to take as many or as few arguments as you want.
+        // System.out.println("Running the app!");
+        // String arg1 = args[0];
+        // System.out.println("\tArg1: " + arg1);
+        // String arg2 = args[1];
+        // System.out.println("\tArg2: " + arg2);
         
         // Note: in practice, you would probably use org.apache.calcite.tools.Frameworks.
         // That package provides simple defaults that make it easier to configure Calcite.
@@ -73,8 +71,10 @@ public class App
 
 
 
-        DuckDBConnection conn = JDBCUtil.connect();
-        var schema = JDBCUtil.getSchema(conn);
+        // var conn = JDBCUtil.connect();
+        // var schema = JDBCUtil.getSchema(conn);
+
+        JDBCUtil.test();
 
     }
 }

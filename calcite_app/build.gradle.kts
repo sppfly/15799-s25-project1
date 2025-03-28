@@ -17,7 +17,9 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.16")
     implementation("org.apache.calcite:calcite-core:${CALCITE_VERSION}")
     implementation("org.apache.calcite:calcite-server:${CALCITE_VERSION}")
-    implementation("org.duckdb:duckdb_jdbc:1.1.3")
+    implementation("org.duckdb:duckdb_jdbc:1.1.3") 
+    implementation("org.apache.commons:commons-dbcp2:2.13.0")
+
 }
 
 group = "edu.cmu.cs.db"
