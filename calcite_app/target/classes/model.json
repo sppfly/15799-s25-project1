@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "defaultSchema": "DUCK",
+  "schemas": [
+    {
+      "type": "jdbc",
+      "name": "DUCK",
+      "jdbcDriver": "org.duckdb.DuckDBDriver",
+      "jdbcUrl": "jdbc:duckdb:/workspaces/15799-s25-project1/test.db"
+    }
+  ]
+}
