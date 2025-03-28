@@ -2,14 +2,17 @@ package edu.cmu.cs.db.calcite_app.app;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.nio.file.Files;
+
+import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlExplainFormat;
 import org.apache.calcite.sql.SqlExplainLevel;
+import org.duckdb.DuckDBConnection;
 
 public class App
 {
@@ -46,6 +49,9 @@ public class App
         Files.writeString(outputPath.toPath(), resultSetString.toString());
     }
 
+
+    
+
     public static void main(String[] args) throws Exception
     {
         if (args.length == 0) {
@@ -64,5 +70,11 @@ public class App
         // That package provides simple defaults that make it easier to configure Calcite.
         // But there's a lot of magic happening there; since this is an educational project,
         // we guide you towards the explicit method in the writeup.
+
+
+
+        DuckDBConnection conn = JDBCUtil.connect();
+        var schema = JDBCUtil.getSchema(conn);
+
     }
 }
