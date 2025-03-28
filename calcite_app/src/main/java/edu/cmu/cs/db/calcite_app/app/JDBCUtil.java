@@ -48,7 +48,7 @@ public class JDBCUtil {
         var dataSource = new BasicDataSource();
         dataSource.setUrl(URL);
 
-        // // Create JdbcSchema manually
+        // Create JdbcSchema manually
         JdbcSchema duckSchema = JdbcSchema.create(
             rootSchema,           // Parent schema
             "DUCK",               // Schema name
@@ -56,11 +56,8 @@ public class JDBCUtil {
             null,                 // Catalog (optional)
             null                  // Schema pattern (optional)
         );
-
-        // // Add the schema to the root
+        // Add the schema to the root
         rootSchema.add("DUCK", duckSchema);
-
-
         System.out.println(duckSchema.getTableNames());
     }
 }

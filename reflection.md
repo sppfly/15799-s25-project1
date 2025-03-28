@@ -5,3 +5,6 @@
 > .read ./data/load.sql
 > analyze;
 ```
+2. Create a schema for Calcite
+change the project to maven cuz gradle sucks
+
