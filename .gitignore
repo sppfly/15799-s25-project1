@@ -30,3 +30,7 @@ data/
 duckdb
 *.db
 *.tgz
+
+
+# maven
+**/target

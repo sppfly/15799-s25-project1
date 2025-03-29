@@ -14,27 +14,7 @@ public class JDBCUtil {
 
     public static final String URL = "jdbc:duckdb:/workspaces/15799-s25-project1/test.db";
 
-    public static Connection connect() throws SQLException, ClassNotFoundException {
-        Properties info = new Properties();
-        info.put("model", "/workspaces/15799-s25-project1/calcite_app/src/main/resources/model.json");
-        Connection connection = DriverManager.getConnection("jdbc:calcite:", info);
-        return DriverManager.getConnection(URL, info);
-    }
-
-    public static JdbcSchema getSchema(Connection connection) throws SQLException {
-        CalciteConnection calciteConnection = connection.unwrap(CalciteConnection.class);
-        SchemaPlus rootSchema = calciteConnection.getRootSchema();
-        
-        var dataSource = new BasicDataSource();
-        dataSource.setUrl(URL);
-
-        JdbcSchema schema = JdbcSchema.create(rootSchema, null, dataSource, null, null);
-        return schema;
-    }
-
-
-
-    public static void test() throws SQLException, ClassNotFoundException {
+    public static SchemaPlus getRootSchema() throws SQLException, ClassNotFoundException {
 
         // Create Calcite root schema
         Properties props = new Properties();
@@ -50,15 +30,14 @@ public class JDBCUtil {
 
         // Create JdbcSchema manually
         JdbcSchema duckSchema = JdbcSchema.create(
-            rootSchema,           // Parent schema
-            "DUCK",               // Schema name
-            dataSource,           // JDBC connection to DuckDB
-            null,                 // Catalog (optional)
-            null                  // Schema pattern (optional)
+                rootSchema, // Parent schema
+                "DUCK", // Schema name
+                dataSource, // JDBC connection to DuckDB
+                null, // Catalog (optional)
+                null // Schema pattern (optional)
         );
         // Add the schema to the root
         rootSchema.add("DUCK", duckSchema);
-        System.out.println(duckSchema.getTableNames());
+        return rootSchema;
     }
 }
-
