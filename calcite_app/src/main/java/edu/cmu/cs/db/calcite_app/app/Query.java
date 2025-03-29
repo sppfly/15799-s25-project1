@@ -8,10 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.config.CalciteConnectionProperty;
-import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
@@ -33,13 +31,9 @@ import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 
-import jdk.jfr.Percentage;
-
 public class Query {
 
     private final SchemaPlus rootSchema;
-
-    private SqlValidator sqlValidator;
 
     private SqlToRelConverter sqlToRelConverter;
 
@@ -83,7 +77,6 @@ public class Query {
                 converterConfig
         );
 
-        this.sqlValidator = validator;
         this.sqlToRelConverter = converter;
     }
 
@@ -113,7 +106,6 @@ public class Query {
         System.out.println(node);
 
         // SqlNode validatedNode = sqlValidator.validate(node);
-
         RelRoot relRoot = this.sqlToRelConverter.convertQuery(node, true, true);
         return relRoot;
     }
