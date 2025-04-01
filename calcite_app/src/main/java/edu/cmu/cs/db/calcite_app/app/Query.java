@@ -11,10 +11,18 @@ import java.util.Properties;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.config.CalciteConnectionProperty;
 import org.apache.calcite.jdbc.CalciteSchema;
+import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.hep.HepPlanner;
+import org.apache.calcite.plan.hep.HepProgram;
+import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.prepare.CalciteCatalogReader;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
+import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import org.apache.calcite.rel.rel2sql.SqlImplementor.Result;
+import org.apache.calcite.rel.rules.CoreRules;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rex.RexBuilder;
@@ -53,16 +61,15 @@ public class Query {
                 CalciteSchema.from(rootSchema.getSubSchema("DUCK")),
                 List.of(), // default schema path
                 typeFactory,
-                new CalciteConnectionConfigImpl(properties)
-        );
+                new CalciteConnectionConfigImpl(properties));
         SqlOperatorTable operatorTable = SqlStdOperatorTable.instance();
-        var validator = SqlValidatorUtil.newValidator(operatorTable, catalogReader, typeFactory, SqlValidator.Config.DEFAULT);
+        var validator = SqlValidatorUtil.newValidator(operatorTable, catalogReader, typeFactory,
+                SqlValidator.Config.DEFAULT);
 
         // Create a cluster with a planner and rex builder
         RelOptCluster cluster = RelOptCluster.create(
                 new VolcanoPlanner(),
-                new RexBuilder(typeFactory)
-        );
+                new RexBuilder(typeFactory));
 
         var converterConfig = SqlToRelConverter.config()
                 .withTrimUnusedFields(true)
@@ -74,8 +81,7 @@ public class Query {
                 catalogReader,
                 cluster,
                 StandardConvertletTable.INSTANCE,
-                converterConfig
-        );
+                converterConfig);
 
         this.sqlToRelConverter = converter;
     }
@@ -98,19 +104,43 @@ public class Query {
     }
 
     public RelRoot parseSql(String sqlString) throws SqlParseException {
-        var parser = SqlParser.create(sqlString);
-
-        System.out.println(SqlParser.config().caseSensitive());
+        SqlParser parser = SqlParser.create(sqlString);
         SqlNode node = parser.parseQuery();
-
-        System.out.println(node);
-
-        // SqlNode validatedNode = sqlValidator.validate(node);
         RelRoot relRoot = this.sqlToRelConverter.convertQuery(node, true, true);
         return relRoot;
     }
 
-    public static String deParseSqlToDuckDB(SqlNode sqlNode) {
+    public RelNode optimze(RelNode relNode) {
+        var node = heuristic(relNode);
+        // return volcano(node);
+        return node;
+    }
+
+    public RelNode heuristic(RelNode relNode) {
+        // Step 1: Use HepPlanner for pre-processing
+        HepProgram hepProgram = new HepProgramBuilder()
+                .addRuleInstance(CoreRules.FILTER_INTO_JOIN.config.toRule())
+                .build();
+
+        HepPlanner hepPlanner = new HepPlanner(hepProgram);
+        hepPlanner.setRoot(relNode);
+
+        return hepPlanner.findBestExp();
+    }
+
+    public RelNode volcano(RelNode relNode) {
+        VolcanoPlanner planner = new VolcanoPlanner();
+        planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
+        // planner.addRule(CoreRules.FILlter);
+        // planner.addRule(CoreRules.PROJECT_MERGE_RULE);
+        planner.setRoot(relNode);
+        return planner.findBestExp();
+    }
+
+    public static String deParseSqlToDuckDB(RelNode relNode) {
+        var converter = new RelToSqlConverter(PostgresqlSqlDialect.DEFAULT);
+        Result result = converter.visitRoot(relNode);
+        SqlNode sqlNode = result.asStatement();
         return sqlNode.toSqlString(PostgresqlSqlDialect.DEFAULT).getSql();
     }
 }

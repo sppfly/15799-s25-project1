@@ -1,7 +1,6 @@
 package edu.cmu.cs.db.calcite_app.app;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -43,8 +42,14 @@ public class App {
         var sqls = query.getSqls(arg1);
         for (var sql : sqls.entrySet()) {
             try {
+                if (sql.getKey().equals("q1.sql")) {
+                    continue;
+                }
                 RelRoot relRoot = query.parseSql(sql.getValue());
-                Path path = Path.of(OUTPUT_PATH, sql.getKey());
+
+                var name = sql.getKey().split("\\.")[0];
+
+                Path path = Path.of(OUTPUT_PATH, name);
 
                 File dir = path.toFile();
                 if (dir.exists()) {
@@ -52,14 +57,23 @@ public class App {
                 }
                 dir.mkdir();
 
-                var original = Path.of(path.toString(), String.format("%s.sql", sql.getKey()));
-                Files.writeString(original, sql.getValue());
+                var originalSqlPath = Path.of(path.toString(), String.format("%s.sql", name));
+                Files.writeString(originalSqlPath, sql.getValue());
 
-                var originalPlan = Path.of(path.toString(), String.format("%s.txt", sql.getKey()));
-                Util.SerializePlan(relRoot.rel, originalPlan.toFile());
+                var originalPlanPath = Path.of(path.toString(), String.format("%s.txt", name));
+                Util.SerializePlan(relRoot.rel, originalPlanPath.toFile());
 
-                break;
-            } catch (IOException | SqlParseException e) {
+                var optimizedPlan = query.optimze(relRoot.rel);
+
+                var optimizedPlanPath = Path.of(path.toString(), String.format("%s_optimzed.txt", name));
+                Util.SerializePlan(optimizedPlan, optimizedPlanPath.toFile());
+
+                var optimizedSql = Query.deParseSqlToDuckDB(optimizedPlan);
+                var optimizedSqlPath = Path.of(path.toString(), String.format("%s_optimzed.sql", name));
+                Files.writeString(optimizedSqlPath, optimizedSql);
+                // break;
+            } catch ( // IOException | 
+                    SqlParseException e) {
                 System.out.println(String.format("get exception on %s", sql.getKey()));
                 throw e;
             }
