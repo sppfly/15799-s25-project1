@@ -120,6 +120,12 @@ public class Query {
         // Step 1: Use HepPlanner for pre-processing
         HepProgram hepProgram = new HepProgramBuilder()
                 .addRuleInstance(CoreRules.FILTER_INTO_JOIN.config.toRule())
+                .addRuleInstance(CoreRules.JOIN_CONDITION_PUSH.config.toRule())
+                .addRuleInstance(CoreRules.JOIN_PUSH_EXPRESSIONS.config.toRule())
+                .addRuleInstance(CoreRules.JOIN_PUSH_TRANSITIVE_PREDICATES.config.toRule())
+                .addRuleInstance(CoreRules.PROJECT_CORRELATE_TRANSPOSE.config.toRule())
+                .addRuleInstance(CoreRules.FILTER_CORRELATE.config.toRule())
+                .addRuleInstance(CoreRules.PROJECT_FILTER_VALUES_MERGE.config.toRule())
                 .build();
 
         HepPlanner hepPlanner = new HepPlanner(hepProgram);

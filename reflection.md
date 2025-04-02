@@ -45,6 +45,10 @@ PROBLEM: somehow q1 does not pass the validation, I guess it's because of the di
 
 The problem is that I do not know what rules should I add, QUESTION: how to know?
 
+I asked the mailing list of Apache Calcite, it turned out the choice of rules is like art instead of science, so basically I need to be famililar with the queries.
+
+As a result I'll just add the rules of textbooks, like no cartisien product, push filter and projection down, etc.
+
 5. Experiment with the rules.
 I'm going to ask ChatGPT what rules should I add, according from the sql
 
@@ -53,6 +57,7 @@ or I'll just add all rules, using reflection in Java
 DONE
 7. Support RelRunner execution.
 I'm not doing it right now
+
 8. Enable the cost-based query optimizer.
 9. Print the cardinality of a table. If you get 100, you may be using the hardcoded default.
 10. Implement statistics (at least support actual table cardinalities).
