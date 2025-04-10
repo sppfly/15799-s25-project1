@@ -4,7 +4,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.parser.SqlParseException;
 
@@ -32,20 +31,25 @@ public class App {
         // var conn = JDBCUtil.connect();
         // var schema = JDBCUtil.getSchema(conn);
         SchemaPlus rootSchema = JDBCUtil.getRootSchema();
-        Query query = new Query(rootSchema);
+        // Query query = new Query(rootSchema);
 
         // foo.sql: the original SQL query
         // foo.txt: the initial RelNode plan of the original SQL query, Logical, before any optimizations
         // foo_optimized.txt: the final optimized RelNode plan, Enumerable, after all your optimizations
         // foo_results.csv: the results of executing your optimized plan in Calcite
         // foo_optimized.sql: your optimized plan deparsed into a SQL query
-        var sqls = query.getSqls(arg1);
+        NewQuery newQuery = NewQuery.init(rootSchema);
+
+        var sqls = newQuery.getSqls(arg1);
         for (var sql : sqls.entrySet()) {
             try {
-                if (sql.getKey().equals("q1.sql")) {
+                if (!sql.getKey().equals("simple.sql")) {
                     continue;
                 }
-                RelRoot relRoot = query.parseSql(sql.getValue());
+
+                var relNode = newQuery.parseAndValidate(sql.getValue());
+                var rewroteQuery = newQuery.hep(relNode);
+                var optimized = newQuery.volcano(rewroteQuery);
 
                 var name = sql.getKey().split("\\.")[0];
 
@@ -61,20 +65,20 @@ public class App {
                 Files.writeString(originalSqlPath, sql.getValue());
 
                 var originalPlanPath = Path.of(path.toString(), String.format("%s.txt", name));
-                Util.SerializePlan(relRoot.rel, originalPlanPath.toFile());
+                Util.SerializePlan(relNode, originalPlanPath.toFile());
 
-                var optimizedPlan = query.optimze(relRoot.rel);
+                var optimizedPlan = optimized;
 
                 var optimizedPlanPath = Path.of(path.toString(), String.format("%s_optimzed.txt", name));
                 Util.SerializePlan(optimizedPlan, optimizedPlanPath.toFile());
 
-                var optimizedSql = Query.deParseSqlToDuckDB(optimizedPlan);
+                var optimizedSql = NewQuery.deParseSqlToDuckDB(optimizedPlan);
                 var optimizedSqlPath = Path.of(path.toString(), String.format("%s_optimzed.sql", name));
                 Files.writeString(optimizedSqlPath, optimizedSql);
                 // break;
             } catch ( // IOException | 
                     SqlParseException e) {
-                System.out.println(String.format("get exception on %s", sql.getKey()));
+                // System.out.println(String.format("get exception on %s", sql.getKey()));
                 throw e;
             }
         }
