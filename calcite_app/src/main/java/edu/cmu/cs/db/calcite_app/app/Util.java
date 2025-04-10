@@ -18,7 +18,7 @@ public class Util {
         Files.writeString(outputPath.toPath(), RelOptUtil.dumpPlan("", relNode, SqlExplainFormat.TEXT, SqlExplainLevel.ALL_ATTRIBUTES));
     }
 
-    public static void SerializeResultSet(ResultSet resultSet, File outputPath) throws SQLException, IOException {
+    public static void serializeresultset(ResultSet resultSet, File outputPath) throws SQLException, IOException {
         ResultSetMetaData metaData = resultSet.getMetaData();
         int columnCount = metaData.getColumnCount();
         StringBuilder resultSetString = new StringBuilder();
@@ -46,4 +46,7 @@ public class Util {
         }
         Files.writeString(outputPath.toPath(), resultSetString.toString());
     }
+
+
+
 }

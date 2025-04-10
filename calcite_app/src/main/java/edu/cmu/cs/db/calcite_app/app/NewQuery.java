@@ -3,6 +3,9 @@ package edu.cmu.cs.db.calcite_app.app;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +44,8 @@ import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 
 public class NewQuery {
+
+    static String OUTPUT_PATH = "/workspaces/15799-s25-project1/output";
 
     private VolcanoPlanner volcanoPlanner;
 
@@ -103,22 +108,22 @@ public class NewQuery {
 
     public RelNode hep(RelNode logicalPlan) {
         HepProgram hepProgram = new HepProgramBuilder()
-                // .addRuleInstance(CoreRules.JOIN_CONDITION_PUSH)
-                // .addRuleInstance(CoreRules.JOIN_PUSH_EXPRESSIONS)
-                // .addRuleInstance(CoreRules.JOIN_PUSH_TRANSITIVE_PREDICATES)
-                // .addRuleInstance(CoreRules.PROJECT_CORRELATE_TRANSPOSE)
-                // .addRuleInstance(CoreRules.FILTER_CORRELATE)
-                // .addRuleInstance(CoreRules.PROJECT_MERGE)
-                // .addRuleInstance(CoreRules.FILTER_MERGE)
-                // .addRuleInstance(CoreRules.JOIN_CONDITION_PUSH)
-                // .addRuleInstance(CoreRules.FILTER_PROJECT_TRANSPOSE)
-                // .addRuleInstance(CoreRules.JOIN_CONDITION_PUSH)
-                // .addRuleInstance(CoreRules.JOIN_COMMUTE)
+                .addRuleInstance(CoreRules.JOIN_CONDITION_PUSH)
+                .addRuleInstance(CoreRules.JOIN_PUSH_EXPRESSIONS)
+                .addRuleInstance(CoreRules.JOIN_PUSH_TRANSITIVE_PREDICATES)
+                .addRuleInstance(CoreRules.PROJECT_CORRELATE_TRANSPOSE)
+                .addRuleInstance(CoreRules.FILTER_CORRELATE)
+                .addRuleInstance(CoreRules.PROJECT_MERGE)
+                .addRuleInstance(CoreRules.FILTER_MERGE)
+                .addRuleInstance(CoreRules.JOIN_CONDITION_PUSH)
+                .addRuleInstance(CoreRules.FILTER_PROJECT_TRANSPOSE)
+                .addRuleInstance(CoreRules.JOIN_CONDITION_PUSH)
+                .addRuleInstance(CoreRules.JOIN_COMMUTE)
                 .addRuleInstance(CoreRules.FILTER_INTO_JOIN)
                 .build();
 
         HepPlanner hepPlanner = new HepPlanner(hepProgram);
-        hepPlanner.setRoot(logicalPlan); 
+        hepPlanner.setRoot(logicalPlan);
         return hepPlanner.findBestExp();
     }
 
@@ -159,5 +164,73 @@ public class NewQuery {
         Result result = converter.visitRoot(relNode);
         SqlNode sqlNode = result.asStatement();
         return sqlNode.toSqlString(PostgresqlSqlDialect.DEFAULT).getSql();
+    }
+
+
+    /*** Helper functions to write the result out */
+
+
+    public void writeOriginalSql(String name, String sql) throws IOException {
+        var path = Path.of(OUTPUT_PATH, name, String.format("%s.sql", name));
+        Files.writeString(path, sql);
+    }
+
+    public void writeOriginalPlan(String name, RelNode relNode) throws IOException {
+        var path = Path.of(OUTPUT_PATH, name, String.format("%s.txt", name));
+        Util.SerializePlan(relNode, path.toFile());
+    }
+
+    public void writeOptimizedPlan(String name, RelNode relNode) throws IOException {
+        var path = Path.of(OUTPUT_PATH, name, String.format("%s_optimized.txt", name));
+        Util.SerializePlan(relNode, path.toFile());
+    }
+
+    public void writeOptimizedSql(String name, String sql) throws IOException {
+        var path = Path.of(OUTPUT_PATH, name, String.format("%s_optimized.sql", name));
+        Files.writeString(path, sql);
+    }
+
+    public void writeResult(String name, ResultSet resultSet) throws SQLException, IOException {
+        var path = Path.of(OUTPUT_PATH, name, String.format("%s_results.csv", name));
+        Util.serializeresultset(resultSet, path.toFile());
+    }
+
+    /**
+     *
+     * foo.sql: the original SQL query foo.txt: the initial RelNode plan of the
+     * original SQL query, Logical, before any optimizations foo_optimized.txt:
+     * the final optimized RelNode plan, Enumerable, after all your
+     * optimizations foo_results.csv: the results of executing your optimized
+     * plan in Calcite foo_optimized.sql: your optimized plan deparsed into a
+     * SQL query
+     *
+     *
+     * @param name
+     * @param originalSql
+     * @param optimizedSql
+     * @param originalPlan
+     * @param optimizedPlan
+     * @param resultSet
+     * @throws java.io.IOException
+     * @throws java.sql.SQLException
+     */
+    public void writeOut(String name,
+            String originalSql,
+            RelNode originalPlan,
+            String optimizedSql,
+            RelNode optimizedPlan,
+            ResultSet resultSet) throws IOException, SQLException {
+        Path path = Path.of(OUTPUT_PATH, name);
+        File dir = path.toFile();
+        if (dir.exists()) {
+            dir.delete();
+        }
+        dir.mkdir();
+
+        writeOriginalSql(name, originalSql);
+        writeOriginalPlan(name, originalPlan);
+        writeOptimizedSql(name, optimizedSql);
+        writeOptimizedPlan(name, optimizedPlan);
+        writeResult(name, resultSet);
     }
 }
